@@ -1,47 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-class VideoPlayerPage extends StatefulWidget{
+class VideoPlayerPage extends StatefulWidget {
   @override
   _VideoPlayerPageState createState() => _VideoPlayerPageState();
 }
 
-class _VideoPlayerPageState extends State<VideoPlayerPage>{
+class _VideoPlayerPageState extends State<VideoPlayerPage> {
   late VideoPlayerController _controller;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     _controller = VideoPlayerController.asset('assets/hikkoshi_obasan.mp4');
-    _controller.initialize().then((_) => {
-      setState((){
-
-      })
+    _controller.initialize().then((_) {
+      setState(() {});
     });
   }
 
   @override
-  void dispose(){
+  void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  Widget build(BuildContext context){
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           AspectRatio(
             aspectRatio: _controller.value.aspectRatio,
-            // 動画を表示
             child: VideoPlayer(_controller),
           ),
+          VideoProgressIndicator(
+            _controller,
+            allowScrubbing: true,
+          ),
+          _ProgressText(controller: _controller),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               IconButton(
                 onPressed: () {
-                  // 動画を最初から再生
                   _controller
                       .seekTo(Duration.zero)
                       .then((_) => _controller.play());
@@ -50,14 +52,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage>{
               ),
               IconButton(
                 onPressed: () {
-                  // 動画を再生
                   _controller.play();
                 },
                 icon: Icon(Icons.play_arrow),
               ),
               IconButton(
                 onPressed: () {
-                  // 動画を一時停止
                   _controller.pause();
                 },
                 icon: Icon(Icons.pause),
@@ -67,5 +67,46 @@ class _VideoPlayerPageState extends State<VideoPlayerPage>{
         ],
       ),
     );
+  }
+}
+
+class _ProgressText extends StatefulWidget {
+  final VideoPlayerController controller;
+
+  const _ProgressText({
+    Key? key,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  __ProgressTextState createState() => __ProgressTextState();
+}
+
+class __ProgressTextState extends State<_ProgressText> {
+  late VoidCallback _listener;
+
+  __ProgressTextState() {
+    _listener = () {
+      setState(() {});
+    };
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_listener);
+  }
+
+  @override
+  void deactivate() {
+    widget.controller.removeListener(_listener);
+    super.deactivate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String position = widget.controller.value.position.toString();
+    final String duration = widget.controller.value.duration.toString();
+    return Text('$position / $duration');
   }
 }

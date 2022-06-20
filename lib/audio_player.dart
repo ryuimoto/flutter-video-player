@@ -12,8 +12,9 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/audio.mp3');
+    _controller = VideoPlayerController.asset('assets/megalovania.mp3');
     _controller.initialize().then((_) {
+      // 最初のフレームを描画するため初期化後に更新
       setState(() {});
     });
   }
@@ -34,6 +35,11 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
             padding: EdgeInsets.all(16),
             child: Icon(Icons.music_video, size: 256),
           ),
+          VideoProgressIndicator(
+            _controller,
+            allowScrubbing: true,
+          ),
+          _ProgressText(controller: _controller),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -62,5 +68,46 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
         ],
       ),
     );
+  }
+}
+
+class _ProgressText extends StatefulWidget {
+  final VideoPlayerController controller;
+
+  const _ProgressText({
+    Key? key,
+    required this.controller,
+  }) : super(key: key);
+
+  @override
+  __ProgressTextState createState() => __ProgressTextState();
+}
+
+class __ProgressTextState extends State<_ProgressText> {
+  late VoidCallback _listener;
+
+  __ProgressTextState() {
+    _listener = () {
+      setState(() {});
+    };
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_listener);
+  }
+
+  @override
+  void deactivate() {
+    widget.controller.removeListener(_listener);
+    super.deactivate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String position = widget.controller.value.position.toString();
+    final String duration = widget.controller.value.duration.toString();
+    return Text('$position / $duration');
   }
 }
